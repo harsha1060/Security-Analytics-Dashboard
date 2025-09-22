@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Log Data Report</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+
+    <div class="container">
+        <h1>Log Data Report</h1>
+
+        <div class="section">
+            <h2 class="section-title">Overall Metrics</h2>
+            <div class="metric-grid">
+                <div class="metric-item">
+                    <p class="metric-value">{{ visitor_data.total_visits }}</p>
+                    <p class="metric-label">Total Visits</p>
+                </div>
+                <div class="metric-item">
+                    <p class="metric-value">{{ visitor_data.unique_visitors }}</p>
+                    <p class="metric-label">Unique Visitors</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">HTTP Status Code Summary</h2>
+            <div class="metric-grid">
+                <div class="metric-item">
+                    <p class="metric-value success">{{ status_code_data.summary.ok }}</p>
+                    <p class="metric-label">Total 2xx</p>
+                </div>
+                <div class="metric-item">
+                    <p class="metric-value redirect">{{ status_code_data.summary.redirect }}</p>
+                    <p class="metric-label">Total 3xx</p>
+                </div>
+                <div class="metric-item">
+                    <p class="metric-value client-error">{{ status_code_data.summary.client_error }}</p>
+                    <p class="metric-label">Total 4xx</p>
+                </div>
+                <div class="metric-item">
+                    <p class="metric-value server-error">{{ status_code_data.summary.server_error }}</p>
+                    <p class="metric-label">Total 5xx</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">Detailed Analytics</h2>
+            
+            <div class="table-container">
+                <h3>Top 5 Most Visited Pages</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Page</th>
+                            <th>Visits</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in visitor_data.top_pages %}
+                        <tr>
+                            <td>{{ item.page }}</td>
+                            <td>{{ item.count }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="table-container">
+                <h3>Top 5 Visitor Countries</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Country</th>
+                            <th>Visits</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in visitor_data.top_countries %}
+                        <tr>
+                            <td>{{ item.country }}</td>
+                            <td>{{ item.count }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">Security & External Analysis</h2>
+
+            <div class="table-container">
+                <h3>Potential Scanning Activity</h3>
+                {% if security_alerts.scanning_attempts %}
+                    <ul class="alert-list">
+                        {% for alert in security_alerts.scanning_attempts %}
+                            <li>IP: {{ alert.ip }} with {{ alert.errors }} 404 errors</li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p>No scanning activity detected.</p>
+                {% endif %}
+            </div>
+
+            <div class="table-container">
+                <h3>HTTP Security Headers</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Header</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for header, status in external_analysis.security_headers.items() %}
+                        <tr>
+                            <td>{{ header }}</td>
+                            <td>{{ status }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="table-container">
+                <h3>Technology Stack</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Component</th>
+                            <th>Value</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for component, value in external_analysis.tech_stack.items() %}
+                        <tr>
+                            <td>{{ component }}</td>
+                            <td>{{ value }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="table-container">
+                <h3>Basic Port Scan</h3>
+                <ul class="alert-list">
+                    {% for port_status in external_analysis.port_scan %}
+                        <li>{{ port_status }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

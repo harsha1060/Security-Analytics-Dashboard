@@ -1,0 +1,4 @@
+Flask
+geoip2
+requests
+beautifulsoup4
