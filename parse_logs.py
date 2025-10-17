@@ -58,7 +58,7 @@ def parse_and_store_logs(log_file_path, db_file_path):
         conn.close()
 
 if __name__ == '__main__':
-    LOG_FILE_NAME = 'nasa_access.tsv' 
+    LOG_FILE_NAME = 'access_logs.tsv' 
     DB_FILE_NAME = 'log_data.db'
     
     if not os.path.exists(LOG_FILE_NAME):
