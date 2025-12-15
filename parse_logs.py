@@ -1,67 +1,90 @@
 import re
 import sqlite3
 import os
+import time
+
+# The final, robust regex pattern to match your Apache logs.
+LOG_PATTERN = re.compile(r'(\S+) \S+ \S+ \[([^\]]+)\] \"(\S+) (\S+) (.*?)\" (\d+) (\S+) \"([^\"]*)\" \"([^\"]*)\"')
 
 def parse_and_store_logs(log_file_path, db_file_path):
-    """Parses log file entries and stores them in a SQLite database."""
-    # This regex is specifically for the standard Combined Log Format
-    log_pattern = re.compile(r'(\S+) \S+ \S+ \[([^\]]+)\] "(\S+) (\S+) (\S+)" (\d+) (\d+) "([^"]*)" "([^"]*)"')
-    
+    """
+    Parses log file entries, ensuring synchronization with the database based on existing row count.
+    This is the function called continuously by the app.py background thread.
+    """
     conn = sqlite3.connect(db_file_path)
     c = conn.cursor()
 
-    print("Starting to parse and store log data...")
-    parsed_count = 0
-
     try:
-        with open(log_file_path, 'r', encoding='utf-8', errors='ignore') as f:
-            for i, line in enumerate(f):
-                line = line.strip()
-                if not line:
-                    continue
+        # 1. Get current row count from the database
+        c.execute("SELECT COUNT(id) FROM log_entries")
+        db_row_count = c.fetchone()[0]
+        
+        # 2. Read all lines from the log file (Force fresh read from disk)
+        try:
+            with open(log_file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                all_lines = f.readlines()
+        except FileNotFoundError:
+            return
 
-                match = log_pattern.match(line)
-                if match:
-                    parsed_count += 1
-                    
-                    # Unpack the matched groups
-                    ip_address, timestamp, method, path, protocol, status_code, bytes_sent, referer, user_agent = match.groups()
-                    
-                    parsed_data = (
-                        ip_address,
-                        timestamp,
-                        method,
-                        path,
-                        int(status_code),
-                        int(bytes_sent),
-                        referer,
-                        user_agent
-                    )
-                    
-                    c.execute('''
-                        INSERT INTO log_entries (ip_address, timestamp, method, path, status_code, bytes_sent, referer, user_agent)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                    ''', parsed_data)
+        log_file_total_lines = len(all_lines)
+        
+        # 3. CRITICAL CHECK: If log file hasn't grown beyond the committed count, do nothing.
+        if log_file_total_lines <= db_row_count:
+            return 
 
-                if (i + 1) % 10000 == 0:
-                    conn.commit()
-                    print(f"Committed {i+1} lines...")
+        # 4. Process only the NEW lines: This prevents the duplication.
+        new_lines = all_lines[db_row_count:]
+        new_entries = []
 
-        conn.commit()
-        print(f"Successfully parsed and stored {parsed_count} rows.")
-        if parsed_count == 0:
-            print("No log lines were parsed. The regex pattern might be incorrect for your file's format.")
+        for line in new_lines:
+            line = line.strip()
+            if not line:
+                continue
+
+            match = LOG_PATTERN.match(line)
+            if match:
+                # Unpack the matched groups
+                (ip_address, timestamp, method, path, protocol, status_code_raw, 
+                 bytes_sent_raw, referer, user_agent) = match.groups()
+                
+                # Robust Data Type Conversion
+                try:
+                    status_code = int(status_code_raw)
+                except ValueError:
+                    status_code = 0 
+                
+                try:
+                    bytes_sent = int(bytes_sent_raw) if bytes_sent_raw.isdigit() else 0
+                except ValueError:
+                    bytes_sent = 0
+
+                parsed_data = (
+                    ip_address, timestamp, method, path, status_code, 
+                    bytes_sent, referer, user_agent
+                )
+                
+                new_entries.append(parsed_data)
+            # ELSE: Skipped log lines will not cause duplication.
+
+        # 5. Insert all new entries in a single batch
+        if new_entries:
+            c.executemany('''
+                INSERT INTO log_entries (ip_address, timestamp, method, path, status_code, bytes_sent, referer, user_agent)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            ''', new_entries)
+            
+            conn.commit()
+            print(f"[{time.strftime('%H:%M:%S')}] Committed {len(new_entries)} NEW log lines to DB. New total DB rows: {db_row_count + len(new_entries)}")
             
     except Exception as e:
-        print(f"An error occurred: {e}")
+        print(f"[{time.strftime('%H:%M:%S')}] CRITICAL PARSING ERROR: {e}")
     finally:
         conn.close()
 
 if __name__ == '__main__':
-    LOG_FILE_NAME = 'access_logs.tsv' 
+    # This block is for manual testing only.
+    LOG_FILE_NAME = 'access.log' 
     DB_FILE_NAME = 'log_data.db'
     
-    if not os.path.exists(LOG_FILE_NAME):
-        print(f"Error: The file '{LOG_FILE_NAME}' was not found.")
-    else:
-        parse_and_store_logs(LOG_FILE_NAME, DB_FILE_NAME)
+    # NOTE: The manual run logic here needs to be simple for diagnostics.
+    print("Manual run is disabled. Please use 'python app.py' to run the dashboard.")

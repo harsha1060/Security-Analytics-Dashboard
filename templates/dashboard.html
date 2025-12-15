@@ -2,157 +2,209 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Log Data Report</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Security & Analytics Dashboard</title>
+    <!-- Load Tailwind CSS from CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f7f9fc;
+            min-height: 100vh;
+        }
+        .container-fluid {
+            max-width: 1400px;
+        }
+        .card {
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            padding: 24px;
+            transition: transform 0.2s;
+        }
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+        }
+        .metric-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+        }
+        .category-pill-2xx { background-color: #d1fae5; color: #065f46; } /* Green */
+        .category-pill-3xx { background-color: #fffbe3; color: #a16207; } /* Yellow */
+        .category-pill-4xx { background-color: #fee2e2; color: #991b1b; } /* Red */
+        .category-pill-5xx { background-color: #fce7f3; color: #9d174d; } /* Pink/Purple */
+    </style>
 </head>
-<body>
+<body class="p-4 md:p-8">
+    <div class="container-fluid mx-auto">
+        <header class="mb-8">
+            <h1 class="text-4xl font-extrabold text-gray-900">Web Security & Analytics</h1>
+            <p class="text-gray-500 mt-1">Real-time log analysis and external security audit for starfellharbor.mooo.com{{ TARGET_URL }}</p>
+        </header>
 
-    <div class="container">
-        <h1>Log Data Report</h1>
-
-        <div class="section">
-            <h2 class="section-title">Overall Metrics</h2>
-            <div class="metric-grid">
-                <div class="metric-item">
-                    <p class="metric-value">{{ visitor_data.total_visits }}</p>
-                    <p class="metric-label">Total Visits</p>
+        <!-- Main Metrics Row -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <!-- Total Hits -->
+            <div class="card flex flex-col justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-500">Total Hits</p>
+                    <p class="metric-value text-blue-600">{{ visitor_data.total_hits }}</p>
                 </div>
-                <div class="metric-item">
-                    <p class="metric-value">{{ visitor_data.unique_visitors }}</p>
-                    <p class="metric-label">Unique Visitors</p>
+            </div>
+            <!-- Status Code Summary -->
+            <div class="card flex flex-col justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-500">Success (2xx)</p>
+                    <p class="metric-value text-green-600">{{ status_code_data.success_2xx }}</p>
+                </div>
+            </div>
+            <div class="card flex flex-col justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-500">Client Errors (4xx)</p>
+                    <p class="metric-value text-red-600">{{ status_code_data.client_error_4xx }}</p>
+                </div>
+            </div>
+            <div class="card flex flex-col justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-500">Server Errors (5xx)</p>
+                    <p class="metric-value text-purple-600">{{ status_code_data.server_error_5xx }}</p>
                 </div>
             </div>
         </div>
 
-        <div class="section">
-            <h2 class="section-title">HTTP Status Code Summary</h2>
-            <div class="metric-grid">
-                <div class="metric-item">
-                    <p class="metric-value success">{{ status_code_data.summary.ok }}</p>
-                    <p class="metric-label">Total 2xx</p>
-                </div>
-                <div class="metric-item">
-                    <p class="metric-value redirect">{{ status_code_data.summary.redirect }}</p>
-                    <p class="metric-label">Total 3xx</p>
-                </div>
-                <div class="metric-item">
-                    <p class="metric-value client-error">{{ status_code_data.summary.client_error }}</p>
-                    <p class="metric-label">Total 4xx</p>
-                </div>
-                <div class="metric-item">
-                    <p class="metric-value server-error">{{ status_code_data.summary.server_error }}</p>
-                    <p class="metric-label">Total 5xx</p>
+        <!-- Details Row (Alerts, Paths, IPs, Status Codes) -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+            <!-- Security Alerts -->
+            <div class="card lg:col-span-1">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+                    <svg class="w-5 h-5 mr-2 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.332 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                    Security Alerts (High 4xx Activity)
+                </h2>
+                <div class="space-y-4 text-sm">
+                    {% for alert in security_alerts %}
+                    <div class="border border-red-200 bg-red-50 p-3 rounded-lg">
+                        <p class="font-bold text-red-700 break-words">{{ alert.ip_address }}</p>
+                        <p class="text-xs text-red-600 mt-0.5">Location: {{ alert.location }}</p>
+                        <p class="mt-2 text-gray-700">{{ alert.description }}</p>
+                    </div>
+                    {% else %}
+                    <div class="p-3 bg-green-50 text-green-700 rounded-lg">
+                        <p class="font-medium">No high-volume 4xx error alerts detected.</p>
+                    </div>
+                    {% endfor %}
                 </div>
             </div>
-        </div>
 
-        <div class="section">
-            <h2 class="section-title">Detailed Analytics</h2>
-            
-            <div class="table-container">
-                <h3>Top 5 Most Visited Pages</h3>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Page</th>
-                            <th>Visits</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for item in visitor_data.top_pages %}
-                        <tr>
-                            <td>{{ item.page }}</td>
-                            <td>{{ item.count }}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-            
-            <div class="table-container">
-                <h3>Top 5 Visitor Countries</h3>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Country</th>
-                            <th>Visits</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for item in visitor_data.top_countries %}
-                        <tr>
-                            <td>{{ item.country }}</td>
-                            <td>{{ item.count }}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <div class="section">
-            <h2 class="section-title">Security & External Analysis</h2>
-
-            <div class="table-container">
-                <h3>Potential Scanning Activity</h3>
-                {% if security_alerts.scanning_attempts %}
-                    <ul class="alert-list">
-                        {% for alert in security_alerts.scanning_attempts %}
-                            <li>IP: {{ alert.ip }} with {{ alert.errors }} 404 errors</li>
+            <!-- Top Paths & Top IPs -->
+            <div class="card lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Top Paths -->
+                <div>
+                    <h2 class="text-xl font-semibold text-gray-800 mb-4">Top Visited Paths</h2>
+                    <ul class="space-y-3">
+                        {% for path in visitor_data.top_paths %}
+                        <li class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                            <span class="text-gray-700 truncate mr-4">{{ path.path }}</span>
+                            <span class="px-3 py-1 bg-blue-100 text-blue-800 text-xs font-semibold rounded-full">{{ path.hits }} Hits</span>
+                        </li>
                         {% endfor %}
                     </ul>
-                {% else %}
-                    <p>No scanning activity detected.</p>
-                {% endif %}
+                </div>
+                
+                <!-- Top IPs (Geolocation) -->
+                <div>
+                    <h2 class="text-xl font-semibold text-gray-800 mb-4">Top Visitor IPs</h2>
+                    <ul class="space-y-3">
+                        {% for ip in visitor_data.top_ips %}
+                        <li class="p-3 bg-gray-50 rounded-lg">
+                            <p class="font-mono text-gray-800 font-bold">{{ ip.ip_address }}</p>
+                            <p class="text-xs text-gray-600 mt-0.5">Location: <span class="font-medium">{{ ip.country }}</span></p>
+                            <span class="mt-1 inline-block px-2 py-0.5 bg-green-100 text-green-800 text-xs font-semibold rounded">{{ ip.hits }} Hits</span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- External Audit & Status Code Details -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Status Code Details -->
+            <div class="card lg:col-span-1">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4">Status Code Breakdown</h2>
+                <div class="space-y-2">
+                    {% for item in status_code_data.details %}
+                    <div class="flex justify-between items-center p-2 rounded-lg 
+                        {% if item.status_code >= 200 and item.status_code < 300 %} category-pill-2xx
+                        {% elif item.status_code >= 300 and item.status_code < 400 %} category-pill-3xx
+                        {% elif item.status_code >= 400 and item.status_code < 500 %} category-pill-4xx
+                        {% elif item.status_code >= 500 and item.status_code < 600 %} category-pill-5xx
+                        {% else %} bg-gray-100 text-gray-800
+                        {% endif %}">
+                        <span class="font-mono font-bold">{{ item.status_code }}</span>
+                        <span class="text-sm font-medium">{{ item.count }} requests</span>
+                    </div>
+                    {% endfor %}
+                </div>
             </div>
 
-            <div class="table-container">
-                <h3>HTTP Security Headers</h3>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Header</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for header, status in external_analysis.security_headers.items() %}
-                        <tr>
-                            <td>{{ header }}</td>
-                            <td>{{ status }}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-            
-            <div class="table-container">
-                <h3>Technology Stack</h3>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Component</th>
-                            <th>Value</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for component, value in external_analysis.tech_stack.items() %}
-                        <tr>
-                            <td>{{ component }}</td>
-                            <td>{{ value }}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-            
-            <div class="table-container">
-                <h3>Basic Port Scan</h3>
-                <ul class="alert-list">
-                    {% for port_status in external_analysis.port_scan %}
-                        <li>{{ port_status }}</li>
-                    {% endfor %}
-                </ul>
+            <!-- External Security Audit -->
+            <div class="card lg:col-span-2">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+                    <svg class="w-5 h-5 mr-2 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.048A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.192-2.058-.553-3.016z"></path></svg>
+                    External Security Audit: {{ TARGET_URL }}
+                </h2>
+
+                {% if external_analysis.error %}
+                <div class="p-4 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 mb-4" role="alert">
+                    <p class="font-bold">Audit Error:</p>
+                    <p>{{ external_analysis.error }}</p>
+                </div>
+                {% endif %}
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Security Headers -->
+                    <div>
+                        <h3 class="font-medium text-gray-700 mb-2">HTTP Security Headers</h3>
+                        <ul class="space-y-2 text-sm">
+                            {% for header_item in external_analysis.http_headers %}
+                            {% set is_present = header_item.status == 'PRESENT' %}
+                            <li class="p-3 rounded-lg flex flex-col sm:flex-row sm:items-center 
+                                {% if is_present %} bg-green-50 text-green-800 
+                                {% else %} bg-red-50 text-red-800 {% endif %}">
+                                <div class="font-mono w-full sm:w-48 flex-shrink-0 font-bold mr-4">
+                                    {{ header_item.header }}:
+                                </div>
+                                <div class="mt-1 sm:mt-0 break-words">
+                                    {% if is_present %}
+                                        <span class="font-semibold">{{ header_item.value }}</span>
+                                    {% else %}
+                                        <span class="font-medium italic">{{ header_item.recommendation }}</span>
+                                    {% endif %}
+                                </div>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+
+                    <!-- Port Scan -->
+                    <div>
+                        <h3 class="font-medium text-gray-700 mb-2">Basic Port Scan (80, 443, 22)</h3>
+                        <ul class="space-y-2">
+                            {% for result in external_analysis.port_scan %}
+                            {% set is_open = "OPEN" in result %}
+                            <li class="p-3 rounded-lg text-sm {% if is_open %} bg-red-100 text-red-800 {% else %} bg-green-100 text-green-800 {% endif %}">
+                                {{ result }}
+                            </li>
+                            {% else %}
+                            <li class="p-3 rounded-lg bg-gray-100 text-gray-600 text-sm">
+                                Port scan results not available.
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
