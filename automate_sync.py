@@ -14,7 +14,7 @@ SCP_COMMAND = [
     'access.log' # Save to the current project directory
 ]
 
-SYNC_INTERVAL_SECONDS = 60 # Check for and fetch new logs every minute
+SYNC_INTERVAL_SECONDS = 10 # Check for and fetch new logs every 10 seconds
 # ---------------------
 
 def fetch_and_sync_log_file():

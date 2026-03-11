@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Security & Analytics Dashboard</title>
+    <title>Web Security & Analytics Dashboard</title>
     <!-- Load Tailwind CSS from CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -38,89 +38,125 @@
     </style>
 </head>
 <body class="p-4 md:p-8">
+    {% set blocked_list = blocked_ips|map(attribute='ip_address')|list %}
     <div class="container-fluid mx-auto">
-        <header class="mb-8">
-            <h1 class="text-4xl font-extrabold text-gray-900">Web Security & Analytics</h1>
-            <p class="text-gray-500 mt-1">Real-time log analysis and external security audit for starfellharbor.mooo.com{{ TARGET_URL }}</p>
+        <header class="mb-8 flex flex-col md:flex-row md:items-center md:justify-between">
+            <div>
+                <h1 class="text-4xl font-extrabold text-gray-900">Web Security & Analytics Dashboard</h1>
+                <p class="text-gray-500 mt-1">Monitoring Health & Security for: <span class="font-semibold text-blue-600">{{ TARGET_URL }}</span></p>
+            </div>
+            <div class="mt-4 md:mt-0">
+                <span class="px-4 py-2 bg-blue-100 text-blue-700 rounded-full text-sm font-bold animate-pulse">
+                    Live Updates Active
+                </span>
+            </div>
         </header>
 
         <!-- Main Metrics Row -->
         <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <!-- Total Hits -->
             <div class="card flex flex-col justify-between">
                 <div>
-                    <p class="text-sm font-medium text-gray-500">Total Hits</p>
+                    <p class="text-sm font-medium text-gray-500 uppercase tracking-wider">Total Traffic</p>
                     <p class="metric-value text-blue-600">{{ visitor_data.total_hits }}</p>
                 </div>
+                <p class="text-xs text-gray-400 mt-2">Total server handshakes recorded</p>
             </div>
-            <!-- Status Code Summary -->
             <div class="card flex flex-col justify-between">
                 <div>
-                    <p class="text-sm font-medium text-gray-500">Success (2xx)</p>
+                    <p class="text-sm font-medium text-gray-500 uppercase tracking-wider">Success (2xx)</p>
                     <p class="metric-value text-green-600">{{ status_code_data.success_2xx }}</p>
                 </div>
+                <p class="text-xs text-gray-400 mt-2">Healthy requests served</p>
             </div>
             <div class="card flex flex-col justify-between">
                 <div>
-                    <p class="text-sm font-medium text-gray-500">Client Errors (4xx)</p>
+                    <p class="text-sm font-medium text-gray-500 uppercase tracking-wider">Client Errors (4xx)</p>
                     <p class="metric-value text-red-600">{{ status_code_data.client_error_4xx }}</p>
                 </div>
+                <p class="text-xs text-gray-400 mt-2">Broken links or probing attempts</p>
             </div>
             <div class="card flex flex-col justify-between">
                 <div>
-                    <p class="text-sm font-medium text-gray-500">Server Errors (5xx)</p>
+                    <p class="text-sm font-medium text-gray-500 uppercase tracking-wider">Server Errors (5xx)</p>
                     <p class="metric-value text-purple-600">{{ status_code_data.server_error_5xx }}</p>
                 </div>
+                <p class="text-xs text-gray-400 mt-2">Potential backend crashes</p>
             </div>
         </div>
 
-        <!-- Details Row (Alerts, Paths, IPs, Status Codes) -->
+        <!-- Details Row (Alerts, Paths, IPs) -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
             <!-- Security Alerts -->
-            <div class="card lg:col-span-1">
-                <h2 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
-                    <svg class="w-5 h-5 mr-2 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.332 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                    Security Alerts (High 4xx Activity)
+            <div class="card lg:col-span-1 border-t-4 border-red-500">
+                <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                    <svg class="w-6 h-6 mr-2 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.332 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                    Security Threats
                 </h2>
-                <div class="space-y-4 text-sm">
+                <div class="space-y-4">
                     {% for alert in security_alerts %}
-                    <div class="border border-red-200 bg-red-50 p-3 rounded-lg">
-                        <p class="font-bold text-red-700 break-words">{{ alert.ip_address }}</p>
-                        <p class="text-xs text-red-600 mt-0.5">Location: {{ alert.location }}</p>
-                        <p class="mt-2 text-gray-700">{{ alert.description }}</p>
+                    <div class="p-4 bg-red-50 rounded-xl border border-red-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div class="flex-1">
+                            <p class="font-mono font-bold text-red-800 text-lg">{{ alert.ip_address }}</p>
+                            <p class="text-xs text-red-600 font-medium">{{ alert.location }}</p>
+                            <p class="mt-2 text-gray-700 text-xs leading-relaxed">{{ alert.description }}</p>
+                        </div>
+                        {% if alert.ip_address in blocked_list %}
+                        <span class="whitespace-nowrap px-4 py-2 bg-gray-500 text-white text-xs font-bold rounded-lg shadow-sm">
+                            IP Blocked
+                        </span>
+                        {% else %}
+                        <button 
+                            onclick="confirmBlock('{{ alert.ip_address }}', this)"
+                            class="whitespace-nowrap px-4 py-2 bg-red-600 text-white text-xs font-bold rounded-lg hover:bg-red-700 shadow-sm transition-all transform active:scale-95"
+                        >
+                            Block IP
+                        </button>
+                        {% endif %}
                     </div>
                     {% else %}
-                    <div class="p-3 bg-green-50 text-green-700 rounded-lg">
-                        <p class="font-medium">No high-volume 4xx error alerts detected.</p>
+                    <div class="p-4 bg-green-50 text-green-700 rounded-lg text-center font-medium">
+                        No suspicious bursts detected currently.
                     </div>
                     {% endfor %}
                 </div>
             </div>
 
-            <!-- Top Paths & Top IPs -->
-            <div class="card lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- Top Paths -->
+            <!-- Top Paths & IPs -->
+            <div class="card lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div>
-                    <h2 class="text-xl font-semibold text-gray-800 mb-4">Top Visited Paths</h2>
+                    <h2 class="text-xl font-bold text-gray-800 mb-4 uppercase tracking-tight">Top Paths</h2>
                     <ul class="space-y-3">
                         {% for path in visitor_data.top_paths %}
-                        <li class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                            <span class="text-gray-700 truncate mr-4">{{ path.path }}</span>
-                            <span class="px-3 py-1 bg-blue-100 text-blue-800 text-xs font-semibold rounded-full">{{ path.hits }} Hits</span>
+                        <li class="flex justify-between items-center p-3 bg-gray-50 rounded-lg group hover:bg-blue-50 transition-colors">
+                            <span class="text-sm text-gray-700 truncate font-mono mr-2">{{ path.path }}</span>
+                            <span class="px-3 py-1 bg-blue-100 text-blue-800 text-xs font-bold rounded-full">{{ path.hits }} Hits</span>
                         </li>
                         {% endfor %}
                     </ul>
                 </div>
                 
-                <!-- Top IPs (Geolocation) -->
                 <div>
-                    <h2 class="text-xl font-semibold text-gray-800 mb-4">Top Visitor IPs</h2>
+                    <h2 class="text-xl font-bold text-gray-800 mb-4 uppercase tracking-tight">Top Visitors</h2>
                     <ul class="space-y-3">
                         {% for ip in visitor_data.top_ips %}
-                        <li class="p-3 bg-gray-50 rounded-lg">
-                            <p class="font-mono text-gray-800 font-bold">{{ ip.ip_address }}</p>
-                            <p class="text-xs text-gray-600 mt-0.5">Location: <span class="font-medium">{{ ip.country }}</span></p>
-                            <span class="mt-1 inline-block px-2 py-0.5 bg-green-100 text-green-800 text-xs font-semibold rounded">{{ ip.hits }} Hits</span>
+                        <li class="p-3 bg-gray-50 rounded-lg flex justify-between items-center group hover:bg-green-50 transition-colors">
+                            <div>
+                                <p class="font-mono text-gray-800 font-bold text-sm">{{ ip.ip_address }}</p>
+                                <p class="text-[10px] text-gray-500 uppercase font-bold">{{ ip.country }}</p>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="px-2 py-1 bg-green-100 text-green-800 text-xs font-bold rounded-md">{{ ip.hits }}</span>
+                                {% if ip.ip_address in blocked_list %}
+                                <span class="px-2 py-1 bg-gray-500 text-white text-[10px] font-bold rounded">Blocked</span>
+                                {% else %}
+                                <button 
+                                    onclick="confirmBlock('{{ ip.ip_address }}', this)"
+                                    class="opacity-0 group-hover:opacity-100 px-2 py-1 bg-red-600 text-white text-[10px] font-bold rounded hover:bg-red-700 transition-all transform active:scale-90"
+                                >
+                                    Block
+                                </button>
+                                {% endif %}
+                            </div>
                         </li>
                         {% endfor %}
                     </ul>
@@ -128,11 +164,52 @@
             </div>
         </div>
 
-        <!-- External Audit & Status Code Details -->
+        <!-- Firewall Management Row -->
+        <div class="grid grid-cols-1 gap-6 mb-8">
+            <div class="card border-t-4 border-gray-800">
+                <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                    <svg class="w-6 h-6 mr-2 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                    Active Firewall Blocks (Managed Remotely)
+                </h2>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">IP Address</th>
+                                <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Time Blocked</th>
+                                <th class="px-6 py-3 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            {% for block in blocked_ips %}
+                            <tr class="hover:bg-gray-50 transition-colors">
+                                <td class="px-6 py-4 whitespace-nowrap font-mono text-sm font-bold text-gray-900">{{ block.ip_address }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-500">{{ block.blocked_at }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-right">
+                                    <button 
+                                        onclick="handleUnblock('{{ block.ip_address }}', this)"
+                                        class="px-4 py-1 bg-green-600 text-white text-xs font-bold rounded-lg hover:bg-green-700 shadow-sm transition-all transform active:scale-95"
+                                    >
+                                        Unblock Access
+                                    </button>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="3" class="px-6 py-12 text-center text-gray-400 italic">No IPs are currently restricted by the firewall.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Audit Row -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <!-- Status Code Details -->
+            <!-- Breakdown -->
             <div class="card lg:col-span-1">
-                <h2 class="text-xl font-semibold text-gray-800 mb-4">Status Code Breakdown</h2>
+                <h2 class="text-xl font-bold text-gray-800 mb-4">Response Codes</h2>
                 <div class="space-y-2">
                     {% for item in status_code_data.details %}
                     <div class="flex justify-between items-center p-2 rounded-lg 
@@ -143,63 +220,43 @@
                         {% else %} bg-gray-100 text-gray-800
                         {% endif %}">
                         <span class="font-mono font-bold">{{ item.status_code }}</span>
-                        <span class="text-sm font-medium">{{ item.count }} requests</span>
+                        <span class="text-xs font-bold">{{ item.count }} Requests</span>
                     </div>
                     {% endfor %}
                 </div>
             </div>
 
-            <!-- External Security Audit -->
+            <!-- Audit -->
             <div class="card lg:col-span-2">
-                <h2 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
-                    <svg class="w-5 h-5 mr-2 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.048A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.192-2.058-.553-3.016z"></path></svg>
-                    External Security Audit: {{ TARGET_URL }}
+                <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                    <svg class="w-6 h-6 mr-2 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.048A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.192-2.058-.553-3.016z"></path></svg>
+                    Remote Server Security Audit
                 </h2>
 
-                {% if external_analysis.error %}
-                <div class="p-4 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 mb-4" role="alert">
-                    <p class="font-bold">Audit Error:</p>
-                    <p>{{ external_analysis.error }}</p>
-                </div>
-                {% endif %}
-
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <!-- Security Headers -->
                     <div>
-                        <h3 class="font-medium text-gray-700 mb-2">HTTP Security Headers</h3>
-                        <ul class="space-y-2 text-sm">
+                        <h3 class="text-xs font-bold text-gray-400 uppercase mb-3">HTTP Security Headers</h3>
+                        <ul class="space-y-2">
                             {% for header_item in external_analysis.http_headers %}
-                            {% set is_present = header_item.status == 'PRESENT' %}
-                            <li class="p-3 rounded-lg flex flex-col sm:flex-row sm:items-center 
-                                {% if is_present %} bg-green-50 text-green-800 
-                                {% else %} bg-red-50 text-red-800 {% endif %}">
-                                <div class="font-mono w-full sm:w-48 flex-shrink-0 font-bold mr-4">
-                                    {{ header_item.header }}:
+                            <li class="p-3 rounded-lg text-xs {{ 'bg-green-50 text-green-800' if header_item.status == 'PRESENT' else 'bg-red-50 text-red-800' }}">
+                                <div class="flex justify-between font-bold">
+                                    <span>{{ header_item.header }}</span>
+                                    <span>{{ header_item.status }}</span>
                                 </div>
-                                <div class="mt-1 sm:mt-0 break-words">
-                                    {% if is_present %}
-                                        <span class="font-semibold">{{ header_item.value }}</span>
-                                    {% else %}
-                                        <span class="font-medium italic">{{ header_item.recommendation }}</span>
-                                    {% endif %}
-                                </div>
+                                {% if header_item.status != 'PRESENT' %}
+                                <p class="mt-1 opacity-80">{{ header_item.recommendation }}</p>
+                                {% endif %}
                             </li>
                             {% endfor %}
                         </ul>
                     </div>
 
-                    <!-- Port Scan -->
                     <div>
-                        <h3 class="font-medium text-gray-700 mb-2">Basic Port Scan (80, 443, 22)</h3>
+                        <h3 class="text-xs font-bold text-gray-400 uppercase mb-3">Network Port Status</h3>
                         <ul class="space-y-2">
                             {% for result in external_analysis.port_scan %}
-                            {% set is_open = "OPEN" in result %}
-                            <li class="p-3 rounded-lg text-sm {% if is_open %} bg-red-100 text-red-800 {% else %} bg-green-100 text-green-800 {% endif %}">
+                            <li class="p-3 rounded-lg text-xs font-bold {{ 'bg-red-100 text-red-800' if 'OPEN' in result else 'bg-green-100 text-green-800' }}">
                                 {{ result }}
-                            </li>
-                            {% else %}
-                            <li class="p-3 rounded-lg bg-gray-100 text-gray-600 text-sm">
-                                Port scan results not available.
                             </li>
                             {% endfor %}
                         </ul>
@@ -208,5 +265,70 @@
             </div>
         </div>
     </div>
+
+    <!-- Scripting for Active Firewall Management -->
+    <script>
+        async function confirmBlock(ip, button) {
+            const confirmed = confirm(`SECURITY ACTION:\n\nAre you sure you want to block all traffic from IP ${ip}?\n\nThis will add a DROP rule to your remote server's iptables firewall.`);
+            
+            if (!confirmed) return;
+
+            // UI Feedback
+            const originalText = button.innerText;
+            button.innerText = "Processing...";
+            button.disabled = true;
+            button.classList.add('opacity-50', 'cursor-not-allowed');
+
+            try {
+                const response = await fetch(`/block/${ip}`, { 
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                const data = await response.json();
+
+                if (response.ok) {
+                    alert(`✅ Block Successful: ${data.message}`);
+                    location.reload(); // Reload to update both lists
+                } else {
+                    throw new Error(data.message || 'Remote firewall update failed');
+                }
+            } catch (error) {
+                alert(`❌ Error: ${error.message}`);
+                button.innerText = originalText;
+                button.disabled = false;
+                button.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+        }
+
+        async function handleUnblock(ip, button) {
+            if (!confirm(`RESTORE ACCESS:\n\nAre you sure you want to remove the firewall block for ${ip}?`)) return;
+
+            button.innerText = "Processing...";
+            button.disabled = true;
+            button.classList.add('opacity-50', 'cursor-not-allowed');
+
+            try {
+                const response = await fetch(`/unblock/${ip}`, { 
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                const data = await response.json();
+
+                if (response.ok) {
+                    alert(`✅ Access Restored: ${data.message}`);
+                    location.reload(); 
+                } else {
+                    throw new Error(data.message || 'Remote firewall update failed');
+                }
+            } catch (error) {
+                alert(`❌ Error: ${error.message}`);
+                button.innerText = "Unblock Access";
+                button.disabled = false;
+                button.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+        }
+    </script>
 </body>
 </html>

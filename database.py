@@ -4,6 +4,7 @@ def setup_database():
     conn = sqlite3.connect('log_data.db')
     c = conn.cursor()
 
+    # Existing table
     c.execute('''
         CREATE TABLE IF NOT EXISTS log_entries (
             id INTEGER PRIMARY KEY,
@@ -17,9 +18,19 @@ def setup_database():
             user_agent TEXT
         )
     ''')
+
+    # NEW TABLE: To track blocked IPs
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS blocked_ips (
+            id INTEGER PRIMARY KEY,
+            ip_address TEXT UNIQUE,
+            blocked_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+
     conn.commit()
     conn.close()
 
 if __name__ == '__main__':
     setup_database()
-    print("Database 'log_data.db' and table 'log_entries' created successfully.")
+    print("Database updated with 'blocked_ips' table.")
