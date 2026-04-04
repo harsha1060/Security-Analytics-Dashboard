@@ -5,7 +5,7 @@ import os
 # --- CONFIGURATION ---
 # NOTE: The destination path is automatically set to the current directory ('access.log')
 # The user's provided SCP command is:
-# scp -i "C:\Users\harsh\Downloads\login.pem" ubuntu@ec2-3-80-121-33.compute-1.amazonaws.com:/var/log/apache2/access.log W:\Project\access.log
+# scp -i "C:\path\login.pem" ubuntu@ec2-3-80-121-33.compute-1.amazonaws.com:/var/log/apache2/access.log W:\Project\access.log
 # We will use the parts of this command:
 SCP_COMMAND = [
     'scp',
@@ -27,7 +27,7 @@ def fetch_and_sync_log_file():
         # Run the SCP command
         result = subprocess.run(
             SCP_COMMAND,
-            check=True,  # Raise an exception for non-zero return codes
+            check=True, 
             capture_output=True,
             text=True
         )

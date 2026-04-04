@@ -1,0 +1,13 @@
+services:
+  dashboard:
+    build: .
+    container_name: security_dashboard
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./access.log:/app/access.log
+      - ./log_data.db:/app/log_data.db
+      - C:/Users/harsh/Downloads/login.pem:/app/login.pem:ro
+    environment:
+      - PYTHONUNBUFFERED=1
+    restart: always

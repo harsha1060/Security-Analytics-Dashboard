@@ -12,7 +12,7 @@ import subprocess
 from datetime import datetime, timedelta
 import geoip2.database
 import geoip2.errors
-from parse_logs import parse_and_store_logs # Import the robust parsing function
+from parse_logs import parse_and_store_logs 
 
 # --- CONFIGURATION ---
 DB_FILE = 'log_data.db'
@@ -22,7 +22,7 @@ PARSING_INTERVAL_SECONDS = 10 # Update frequency
 
 # --- SSH CONFIGURATION FOR ACTIVE BLOCKING ---
 # Ensure the path to your .pem key is correct and accessible by this script
-SSH_KEY_PATH = 'C:\\Users\\harsh\\Downloads\\login.pem'
+SSH_KEY_PATH = '/app/login.pem'
 REMOTE_USER = 'ubuntu'
 REMOTE_HOST = 'ec2-3-80-121-33.compute-1.amazonaws.com'
 
@@ -50,7 +50,7 @@ def background_parser_task(interval_seconds):
         return
 
     while True:
-        # This function intelligently only imports NEW lines
+        # imports NEW lines
         parse_and_store_logs(LOG_FILE, DB_FILE)
         time.sleep(interval_seconds)
 
@@ -281,4 +281,4 @@ if __name__ == '__main__':
     parser_thread.start()
     
     # 3. Start Flask
-    app.run(debug=True, use_reloader=False)
+    app.run(host='0.0.0.0', port=5000, debug=True, use_reloader=False)

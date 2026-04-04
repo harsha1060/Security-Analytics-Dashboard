@@ -3,7 +3,6 @@ import sqlite3
 import os
 import time
 
-# The final, robust regex pattern to match your Apache logs.
 LOG_PATTERN = re.compile(r'(\S+) \S+ \S+ \[([^\]]+)\] \"(\S+) (\S+) (.*?)\" (\d+) (\S+) \"([^\"]*)\" \"([^\"]*)\"')
 
 def parse_and_store_logs(log_file_path, db_file_path):
