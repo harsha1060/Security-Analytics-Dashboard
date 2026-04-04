@@ -1,86 +1,85 @@
-**🛡️ SECURITY & ANALYTICS DASHBOARD**
-=====================================
+🛡️ Security Analytics Dashboard & Personal SIEM
+================================================
 
-This project is a powerful, Python-based tool that provides a security and analytics overview for any website. It processes your web server's log data, transforming raw information into clear, actionable insights that can help you understand your website and secure it.
+**A lightweight, proactive security monitoring tool for real-time threat detection and active defense.**
 
-### **How This Project Can Help You**
+This project is a Python-based **Personal SIEM** (Security Information and Event Management) tool. It transforms raw web server logs into an actionable security dashboard, allowing you to monitor traffic, detect probes, and **actively block malicious IPs** in real-time.
 
--   **Monitor Website Operations:** Gain a clear understanding of your site's operational health by analyzing visitor traffic and identifying common HTTP status codes, allowing you to quickly spot issues like broken links (404s).
+* * * * *
 
--   **Enhance Security Posture:** Proactively detect and analyze suspicious activity, such as vulnerability scanning. The tool identifies IP addresses that are probing your site for weaknesses by looking for high volumes of error codes.
+🚀 Key Features
+---------------
 
--   **Audit External Security:** The project performs a live audit of a target website to report on crucial security elements, including missing HTTP security headers and open network ports. These checks are vital for ensuring your site is protected against common cyber threats.
+-   **Real-Time Log Probing:** Automatically scans incoming logs for malicious patterns, including directory fuzzing and common exploit payloads.
 
--   **Understand Traffic Patterns:** Gain insight into where your website traffic originates from, which is a key component of a comprehensive security and analytics overview.
+-   **Active Defense (Live Blocking):** An integrated firewall interface that allows you to block/unblock malicious IP addresses directly from the dashboard.
 
-### **Getting Started**
+-   **Dockerized Deployment:** Fully containerized using Docker and Docker Compose for "one-command" setup and environment isolation.
 
-#### **Prerequisites**
+-   **Geographical Insights:** Integrated MaxMind GeoLite2 tracking to visualize the origin of attack vectors.
 
-To use this tool, you'll need:
+-   **Security Auditing:** Live network probing for missing HTTP security headers and open ports on the target infrastructure.
 
--   **Python 3.x**
+-   **Operational Intelligence:** Visualizes HTTP status codes (200, 403, 404, 500) to identify site health and bot scraping activity.
 
--   **Your website's log file**: The project is configured to read a file named `access_logs.tsv`. Make sure your log file is in the **Combined Log Format** and rename it to `access_logs.tsv`.
+* * * * *
 
--   **GeoIP Database**: Download the free `GeoLite2-City.mmdb` database from the [MaxMind website](https://dev.maxmind.com/geoip/geolite2-free-geolocation-data). This is required for the visitor country analysis.
+🛠️ Tech Stack
+--------------
 
--   **Project Dependencies**: The required Python libraries are listed in `requirements.txt`.
+-   **Backend:** Python 3.x, Flask
 
-#### **Setup and Installation**
+-   **Database:** SQLite (for lightweight, portable log storage)
 
-1.  **Download the project files** or clone this repository.
+-   **DevOps:** Docker, Docker Compose
 
-2.  **Navigate to the project directory** in your terminal.
+-   **Security:** Regex-based Log Analysis, Socket Programming (Port Scanning)
 
-3.  **Install the required libraries** by running this command in your terminal:
+-   **Frontend:** HTML5, CSS3, Chart.js (for real-time analytics)
 
-    Bash
+* * * * *
 
-    ```
-    pip install -r requirements.txt
+📦 Getting Started
+------------------
 
-    ```
+### Prerequisites
 
-4.  **Place your log file and the GeoLite2-City.mmdb file** in the project's root directory.
+-   & Docker Compose installed.
 
-### **Usage**
+-   **MaxMind Database:** Download `GeoLite2-City.mmdb` from and place it in the root directory.
 
-Follow these steps in your terminal to process your logs and run the dashboard:
+-   **Log File:** Ensure your web logs are in Combined Log Format and named `access_logs.tsv` (or update the config).
 
-1.  **Set up the database**: This command creates a new, empty database file for your log data.
+### Quick Start (Docker)
 
-    Bash
+The fastest way to get the SIEM running:
 
-    ```
-    python database.py
+The dashboard will be available at `http://localhost:5000`.
 
-    ```
+* * * * *
 
-2.  **Analyze your log data**: This script will read your log file and store all the data in the database.
+🔍 How It Works
+---------------
 
-    Bash
+### 1\. Log Ingestion & Parsing
 
-    ```
-    python parse_logs.py
+The `parse_logs.py` engine utilizes regular expressions to deconstruct raw log strings into structured data (IP, Timestamp, Request Type, Status Code, etc.) and stores them in a local SQLite database for high-speed querying.
 
-    ```
+### 2\. Threat Detection Logic
 
-3.  **Start the dashboard**: Run the Flask application to view your security and analytics report.
+The tool flags an IP as **"Suspicious"** if it meets specific criteria:
 
-    Bash
+-   Exceeding a threshold of `403 Forbidden` or `404 Not Found` errors within a short window (Indicative of directory busting/fuzzing).
 
-    ```
-    python app.py
+-   Presence of SQL injection strings (e.g., `UNION SELECT`, `' OR 1=1`) in request URIs.
 
-    ```
+### 3\. Active Mitigation
 
-4.  **View the report**: Open your web browser and navigate to the local URL provided in the terminal (usually `http://127.0.0.1:5000`).
+The **Live Blocking** module interfaces with the system's network layer (or simulated via the app interface) to drop packets from flagged IPs. You can manage the "Blacklist" directly through the **Security Management** tab in the UI.
 
-### **Contributing**
+* * * * *
 
-Contributions, issues, and feature requests are welcome!
+📄 License
+----------
 
-### **License**
-
-This project is licensed under the MIT License.
+Distributed under the MIT License. See `LICENSE` for more information.
