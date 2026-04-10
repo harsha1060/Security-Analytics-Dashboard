@@ -1,23 +1,23 @@
-# Use an official Python runtime as a parent image
 FROM python:3.11-slim
 
-# Install OpenSSH client (needed for the 'ssh' command in app.py)
+# Install OpenSSH client
 RUN apt-get update && apt-get install -y openssh-client && rm -rf /var/lib/apt/lists/*
 
-# Set the working directory in the container
 WORKDIR /app
 
-# Copy the requirements file into the container
+# Copy requirements and install
 COPY requirements.txt .
-
-# Install any needed packages specified in requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the rest of your application code
+# Copy all project files
 COPY . .
 
-# Expose the port Flask runs on
+# --- FIX FOR SSH KEY PERMISSIONS ---
+# We create a secure directory, copy the key there, and restrict permissions
+RUN mkdir -p /root/.ssh && \
+    chmod 700 /root/.ssh
+
+# We will use a script or a command change to handle the key at runtime
 EXPOSE 5000
 
-# Command to run the application
-CMD ["python", "app.py"]
+CMD ["sh", "-c", "cp /app/login.pem /root/login.pem && chmod 600 /root/login.pem && python app.py"]
