@@ -1,6 +1,5 @@
 __pycache__/
 *.pyc
 *.db
-*.log
-*.mmdb
+GeoLite2-City.mmdb
 .env
