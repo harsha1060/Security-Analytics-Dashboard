@@ -10,8 +10,8 @@ from bs4 import BeautifulSoup
 import socket
 import subprocess
 from datetime import datetime, timedelta
-import geoip2.database
-import geoip2.errors
+import geoip2.database  # --> Make sure to install the geoip2 library via pip
+import geoip2.errors    # --> For handling exceptions when IPs are not found in the GeoIP database
 from parse_logs import parse_and_store_logs 
 
 # --- CONFIGURATION ---
