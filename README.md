@@ -1,85 +1,81 @@
-🛡️ Security Analytics Dashboard & Personal SIEM
-================================================
+# Security Analytics Dashboard
 
-**A lightweight, proactive security monitoring tool for real-time threat detection and active defense.**
+A lightweight personal SIEM built to transform raw web server logs into an actionable security dashboard — with real-time threat detection, active IP blocking, and geographical attack visualization.
 
-This project is a Python-based **Personal SIEM** (Security Information and Event Management) tool. It transforms raw web server logs into an actionable security dashboard, allowing you to monitor traffic, detect probes, and **actively block malicious IPs** in real-time.
+---
 
-* * * * *
+## Overview
 
-🚀 Key Features
----------------
+Most homelab and self-hosted setups generate a steady stream of access logs that go unread. This project changes that: a Python/Flask application that ingests those logs, identifies malicious patterns, and gives you a live dashboard to monitor and respond to threats — including blocking offending IPs directly from the UI.
 
--   **Real-Time Log Probing:** Automatically scans incoming logs for malicious patterns, including directory fuzzing and common exploit payloads.
+---
 
--   **Active Defense (Live Blocking):** An integrated firewall interface that allows you to block/unblock malicious IP addresses directly from the dashboard.
+## Features
 
--   **Dockerized Deployment:** Fully containerized using Docker and Docker Compose for "one-command" setup and environment isolation.
+**Threat Detection**
+- Regex-based log analysis flagging directory fuzzing, SQL injection attempts, and abnormal error-rate patterns
+- Configurable thresholds for `403` and `404` error bursts (indicative of active enumeration)
 
--   **Geographical Insights:** Integrated MaxMind GeoLite2 tracking to visualize the origin of attack vectors.
+**Active Defense**
+- Block and unblock malicious IPs directly from the Security Management tab
+- Interfaces with the system network layer to drop flagged traffic in real time
 
--   **Security Auditing:** Live network probing for missing HTTP security headers and open ports on the target infrastructure.
+**Visibility**
+- HTTP status code breakdown (`200`, `403`, `404`, `500`) for traffic health and bot detection
+- MaxMind GeoLite2 integration for geographical origin tracking of attack vectors
+- Live network probing for missing HTTP security headers and exposed ports on your infrastructure
 
--   **Operational Intelligence:** Visualizes HTTP status codes (200, 403, 404, 500) to identify site health and bot scraping activity.
+**Deployment**
+- Fully Dockerized — single command to bring the entire stack up
+- SQLite backend for portable, dependency-free log storage
 
-* * * * *
+---
 
-🛠️ Tech Stack
---------------
+## Tech Stack
 
--   **Backend:** Python 3.x, Flask
+| Layer | Technology |
+|---|---|
+| Backend | Python 3.x, Flask |
+| Database | SQLite |
+| Frontend | HTML5, CSS3, Chart.js |
+| DevOps | Docker, Docker Compose |
+| Security | Regex log analysis, Socket programming |
 
--   **Database:** SQLite (for lightweight, portable log storage)
+---
 
--   **DevOps:** Docker, Docker Compose
-
--   **Security:** Regex-based Log Analysis, Socket Programming (Port Scanning)
-
--   **Frontend:** HTML5, CSS3, Chart.js (for real-time analytics)
-
-* * * * *
-
-📦 Getting Started
-------------------
+## Getting Started
 
 ### Prerequisites
 
--   & Docker Compose installed.
+- Docker and Docker Compose installed
+- MaxMind GeoLite2 database — download `GeoLite2-City.mmdb` from [maxmind.com](https://www.maxmind.com) and place it in the project root
+- Web server logs in Combined Log Format, named `access_logs.tsv` (or update the path in config)
 
--   **MaxMind Database:** Download `GeoLite2-City.mmdb` from and place it in the root directory.
+### Quick Start
 
--   **Log File:** Ensure your web logs are in Combined Log Format and named `access_logs.tsv` (or update the config).
+```bash
+docker compose up --build
+```
 
-### Quick Start (Docker)
+Dashboard available at `http://localhost:5000`.
 
-The fastest way to get the SIEM running:
+---
 
-The dashboard will be available at `http://localhost:5000`.
+## How It Works
 
-* * * * *
+### Log Ingestion
+`parse_logs.py` uses regular expressions to break raw log strings into structured records — IP, timestamp, request type, status code, URI — and stores them in SQLite for fast querying.
 
-🔍 How It Works
----------------
+### Threat Detection
+An IP is flagged as suspicious when it:
+- Exceeds the configured threshold of `403` or `404` responses within a short time window (directory busting indicator)
+- Contains known injection strings in the request URI (`UNION SELECT`, `' OR 1=1`, etc.)
 
-### 1\. Log Ingestion & Parsing
+### Active Mitigation
+Flagged IPs appear in the Security Management tab. Blocking an IP interfaces with the system's network layer to drop its packets. The blocklist is fully manageable from the dashboard without touching the command line.
 
-The `parse_logs.py` engine utilizes regular expressions to deconstruct raw log strings into structured data (IP, Timestamp, Request Type, Status Code, etc.) and stores them in a local SQLite database for high-speed querying.
+---
 
-### 2\. Threat Detection Logic
+## License
 
-The tool flags an IP as **"Suspicious"** if it meets specific criteria:
-
--   Exceeding a threshold of `403 Forbidden` or `404 Not Found` errors within a short window (Indicative of directory busting/fuzzing).
-
--   Presence of SQL injection strings (e.g., `UNION SELECT`, `' OR 1=1`) in request URIs.
-
-### 3\. Active Mitigation
-
-The **Live Blocking** module interfaces with the system's network layer (or simulated via the app interface) to drop packets from flagged IPs. You can manage the "Blacklist" directly through the **Security Management** tab in the UI.
-
-* * * * *
-
-📄 License
-----------
-
-Distributed under the MIT License. See `LICENSE` for more information.
+Distributed under the MIT License. See `LICENSE` for details.
